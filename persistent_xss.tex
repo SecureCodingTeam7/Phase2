@@ -1,0 +1,30 @@
+\chapter{Persistent XSS}
+
+\section{Observation}
+
+We discovered that the field "Name" in sc-course/views/users/register.php is vulnerable to persistent Cross-Site-Scripting(XSS).
+An attacker can enter any kind of java-script code in this text field. If the Admin goes to sc-course/views/approve\_users.php the user information about new registrations are  loaded out of the database. In our case the malicious code is executed when displaying the name.
+
+There are many possibilities to exploit this vulnerability. For example the admin could be redirected to a fake site where all his inputs will be stored.\newline
+
+
+Likelihood:  \newline
+
+Impact: \newline
+
+Risk: \newline
+
+\section{Discovery}
+
+This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field.
+
+\section{Likelihood}
+Exploiting this vulnerability requires basic technical skills. The attacker has to know about the basics of a XSS attack and basic java-script commands. It is possible to exploit this vulnerability from Internet as normal user.
+
+\section{Implication}
+A successful attack could lead to compromise of sensitive data. Also the attacker could log in as admin by accessing his session key.
+
+\section{Recommendations}
+To prevent Cross-Site-Scripting attacks, the user input has to be sanitized before inserted into the database. Go to \url{https://www.owasp.org/index.php/Top_10_2013-A3-Cross-Site_Scripting_(XSS)} for more information. \newline
+This observation relates to the OWASP Top-10 issues A3 - Cross-Site-Scripting
+
