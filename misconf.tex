@@ -1,0 +1,37 @@
+\chapter{Security Misconfiguration}
+
+\section{Observation}
+
+We discovered that the following directories are directly accessible and all files in it can be downloaded in the browser.
+
+\begin{itemize}
+\item \textit{sc-course/bin}
+\item \textit{sc-course/users}
+\item \textit{sc-course/includes}
+\end{itemize}
+
+In the first directory are the executable of the batch parser, the source code of the parser and an example file of a batch upload. In the other two are parts of the PHP source code used by the web application.\newline
+
+
+Likelihood: high \newline
+
+Impact: low - medium\newline
+
+Risk: medium\newline
+
+\section{Discovery}
+
+We found that out using \textit{zap} and \textit{nikto}. We could then easily access the directories by entering them in the address bar of our browser.
+
+\section{Likelihood}
+The likelihood that someone is able to find these directories is very easy, because you just need some basic knowledge of the tools used. In principal you just need to start them and perform a scan on the URL of the web application.
+
+\section{Implication}
+The attacker gains more knowledge of the internal system of the application. It has access to the source code of the parser written in C and some parts of the PHP application. \\
+By analyzing the source code it could be easier for the attacker to find further vulnerabilities he can exploit, which may have a bigger impact.
+
+\section{Recommendations}
+There should be an index file for every sub folder in the web application. Then the content of the directory is not listed by apache, but instead the index file is shown.
+
+\section{Comparison with our App}
+There is an index file in every sub directory within our web application.
