@@ -1,6 +1,10 @@
-\chapter{Persistent XSS}
+\chapter{Cross Site Scripting Attacks}
 
-\section{Observation}
+\section{Reflected XSS}
+
+\section{Persistent XSS}
+
+\subsection{Observation}
 
 We discovered that the field "Name" in sc-course/views/users/register.php is vulnerable to persistent Cross-Site-Scripting(XSS) with the following steps:
 \begin{enumerate}
@@ -18,21 +22,21 @@ Impact: medium-high\newline
 
 Risk: high\newline
 
-\section{Discovery}
+\subsection{Discovery}
 
 This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field.
 
-\section{Likelihood}
+\subsection{Likelihood}
 Exploiting this vulnerability requires basic technical skills. The attacker has to know about the basics of a XSS attack and basic java-script commands. It is possible to exploit this vulnerability from Internet as normal user.
 
-\section{Implication}
+\subsection{Implication}
 A successful attack could lead to compromise of sensitive data. Also the attacker could log in as admin by accessing his session key.
 
-\section{Recommendations}
+\subsection{Recommendations}
 To prevent Cross-Site-Scripting attacks, the user input has to be sanitized before inserted into the database. Go to \url{https://www.owasp.org/index.php/Top_10_2013-A3-Cross-Site_Scripting_(XSS)} for more information. \newline
 This observation relates to the OWASP Top-10 issues A3 - Cross-Site-Scripting
 
-\section{Comparison with our App}
+\subsection{Comparison with our App}
 We avoided persistent XSS attacks by using PHP Data Objects (PDO) to query the database. 
 This includes the usage of prepared statements, so that 
 inputs are automatically sanitized.

