@@ -68,3 +68,5 @@ A successful attack makes the server executing any code or program you like. We 
 \section{Recommendations}
 The easiest way to fix this issue is to use temporary randomly assigned file names and get rid of the one the user chose (Do not trust the user's unput!). Normally this is done automatically by PHP, moving the file to the originally chosen file name by the user is optional but part of most tutorials on the Internet.
 
+\section{Comparison with our App}
+Our application is always using the temporary name PHP saved the file under. That means the application is not affected by this vulnerability, because we do not care about the user given name of the file.

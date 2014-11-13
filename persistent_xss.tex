@@ -32,3 +32,7 @@ A successful attack could lead to compromise of sensitive data. Also the attacke
 To prevent Cross-Site-Scripting attacks, the user input has to be sanitized before inserted into the database. Go to \url{https://www.owasp.org/index.php/Top_10_2013-A3-Cross-Site_Scripting_(XSS)} for more information. \newline
 This observation relates to the OWASP Top-10 issues A3 - Cross-Site-Scripting
 
+\section{Comparison with our App}
+We avoided persistent XSS attacks by using PHP Data Objects (PDO) to query the database. 
+This includes the usage of prepared statements, so that 
+inputs are automatically sanitized.
