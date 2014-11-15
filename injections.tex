@@ -16,7 +16,9 @@ Impact:      	high\newline
 Risk: high \newline
 
 \subsection{Discovery}
-This vulnerability was discovered by the tool sqlmap. The result of the first Test in Listing \ref{listing:first_test} shows that GET-Parameter is vulnerable.
+This vulnerability was discovered by the tool sqlmap.
+We collected a list of all request with GET-Parameters with ZAP. Next, we tested all that request for sql-injection with a simple SLEEP command. After we found the mentioned vulnerable request, we started exploiting it with sqlmap.
+ The result of the first Test in Listing \ref{listing:first_test} shows that GET-Parameter is vulnerable.
 
 
 

@@ -30,7 +30,11 @@ This vulnerability was discovered by simply testing the possible inputs for all 
 Exploiting this vulnerability requires basic technical skills. The attacker has to know about the basics of a XSS attack and basic java-script commands. It is possible to exploit this vulnerability from Internet as normal user.
 
 \subsection{Implication}
-A successful attack could lead to compromise of sensitive data. Also the attacker could log in as admin by accessing his session key.
+There are multiple possible implication of a successful attack.  In combination with the unset HTTP\_ONLY flag leads to the possibility to impersonate as admin. To do so, the attacker can hijack the admin's session key by placing a javascript command  at the mentioned spot, which sents him the current session key. That's possible due to the unset HTTP\_ONLY-flag.  Therefore the session key can be accessed by the javascript command \"documnet.cookie\".
+The unset HTTP\_ONLY-flag  was discovered by the tool ZAP.
+The attacker could also create a duplicate of the website, to that the admin is redirected, without even noticing. In that way, the attaccker could record all inputs made by the admin.
+
+
 
 \subsection{Recommendations}
 To prevent Cross-Site-Scripting attacks, the user input has to be sanitized before inserted into the database. Go to \url{https://www.owasp.org/index.php/Top_10_2013-A3-Cross-Site_Scripting_(XSS)} for more information. \newline
