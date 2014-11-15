@@ -5,8 +5,8 @@
 
 \subsection{Observation}
 
-We discovered that the request \textit{host-ip/sc-course/views/transactions/tan\_entry.php?transaction\_id=x} is vulnerable to MYSQL Injections.
-The attacker has to be logged in as user in order to create a new transaction . After inserting an account number and an amount for the new transaction the above-named request is sent. The user now would have to insert the TAN. At this point the parameter "transaction\_id can be used for all kind mysql  injections.
+We discovered that the request \textit{host-ip/sc-course/views/transactions/tan\_entry.php?transaction\_id=x} is vulnerable to SQL Injections.
+The attacker has to be logged in as user in order to create a new transaction . After inserting an account number and an amount for the new transaction the above-named request is sent. The user now would have to insert the TAN. At this point the parameter "transaction\_id can be used for all kind SQL injections.
 
 
 Likelihood: high\newline
@@ -16,9 +16,18 @@ Impact:      	high\newline
 Risk: high \newline
 
 \subsection{Discovery}
-This vulnerability was discovered by the tool sqlmap.
-We collected a list of all request with GET-Parameters with ZAP. Next, we tested all that request for sql-injection with a simple SLEEP command. After we found the mentioned vulnerable request, we started exploiting it with sqlmap.
- The result of the first Test in Listing \ref{listing:first_test} shows that GET-Parameter is vulnerable.
+With ZAP Spider, we were searching for GET and POST Requests with Parameters which probably will be inserted into a SQL query.
+
+\subsubsection{GET}
+\begin{itemize}
+	\item http://<host-ip>/sc-course/views/transactions/user.php?user\_id=2 
+	\item http://<host-ip>/sc-course/views/transactions/tan\_entry.php?transaction\_id=18
+	
+\end{itemize}
+ In the context of SQL Injections, we ignore the Get-Requests with the flash parameter, because they're not part of SQL queries.
+ The two URLs were tested with \textit{sqlmap}. Although testing the first URL was unsuccessful, the result of the second test in Listing \ref{listing:first_test} showed that the GET-Parameter\textbf{ transaction\_id} is vulnerable to boolean-based blind and time-based blind SQL Injections. Boolean-based blind injections inserting statements into the parameter. By comparing different responses, the tool can infer whether a injection was successful or not.
+ Time-based blind injections insert statements which cause the database to pause for a specific time. By comparing different response times, the tool can verify a successful statement
+ 
 
 
 
@@ -94,10 +103,10 @@ Now you can dump a table, e.g "users"
 	
 \end{lstlisting}
 
-As you can see in Listing \ref{listing:dump_table} sqlmap-get-tables  you receive a list of the columns of the table. You also get a list of all entries. For this example only the data of the admin were chosen, but you can access every entry.
+As you can see in Listing \ref{listing:dump_table}. you receive a list of the columns of the table. You also get a list of all entries. For this example only the data of the admin were chosen, but you can access every entry.
  \newline
  \newline
-A further possibillity is to break the authentication of the database by hijacking the password of the database root user.
+A further possibility is to break the authentication of the database by hijacking the password of the database root user.
 
 \begin{lstlisting}[caption=Get password of database root user,label=listing:database_get_password]
 	python sqlmap.py -u "192.168.56.101/sc-course/views/transactions/tan_entry.php?transaction_id=14" --users --passwords -D banking_development 
@@ -128,24 +137,40 @@ A further possibillity is to break the authentication of the database by hijacki
 	
 \end{lstlisting}
 
-With a integrated dictionary-based password cracking tool, you can convert the hashed password to plain text assuming weak passwords (like in our case). Now you can access adminer web-interface and login as root.
+With a integrated dictionary-based password cracking tool, you can convert the hashed password to plain text assuming weak passwords (like in our case). Now you can access the adminer web-interface and login as root.
 
+\subsubsection{POST}
+\begin{itemize}
+	\item http://192.168.56.101/sc-course/controllers/user/login\_process.php (email,password)
+	\item http://192.168.56.101/sc-course/controllers/transactions/create\_process.php (transaction[payment][to\_iban],transaction[payment][amount])
+	\item http://192.168.56.101/sc-course/controllers/user/registration\_process.php (user[email],user[name],user[password],user[password\_confirmation],user[account\_no],user[employee],user[terms\_and\_conditions])
+	\item
+	
+\end{itemize}
+
+The List above shows all relevant POST-Request with the corresponding Parameters in brackets. To test this parameters for possible injections, you can have a look at \ref{listing:post}, where the first request is tested.
+
+\begin{lstlisting}[caption=Testing POST parameters for injections,label=listing:post]
+sqlmap -u "http://192.168.56.101/sc-course/controllers/user/login_process.php" --data 'email=nobody@in.tum.de&password=anypassword'
+
+\end{lstlisting}
+Unfortunately none of the requests is insecure in terms of SQL Injections.
 
 \subsection{Likelihood}
-Assuming that the attacker has basic knowledge about MySql-Injection and knows how to use sqlmap, it's very likely that this vulnerability will be exploited.
+Assuming that the attacker has basic knowledge about SQL Injections and knows how to use \textit{sqlmap}, it's very likely that this vulnerability will be exploited.
 
 
 \subsection{Implication}
-The vulnerability in combination with sqlmap leads to full compromise of all data, stored in the database. The attacker can hijack information about the names of databases, tables, columns of tables and can even dump whole tables.  In our special case, it was even possible to get the users' passwords in plaintext, because they weren't hashed.
-You can also get the name and the password of the root user of the database. This was benifited by a weak password, whereby the plain password could be recovered from the received hash within seconds. This results in full write access to the database for the attacker.
+The vulnerability in combination with \textit{sqlmap} leads to full compromise of all data, stored in the database. The attacker can hijack information about the names of databases, tables, columns of tables and can even dump whole tables.  In our special case, it was even possible to get the users' passwords in plaintext, because they weren't hashed. This is a vulnerability itself, described at \url{https://www.owasp.org/index.php/Top_10_2013-A6-Sensitive_Data_Exposure}
+You can also get the name and the password of the root user of the database. This was benefited by a weak password, whereby the plain password could be recovered from the received hash within seconds. This results in full write access to the database for the attacker.
 
 
 \subsection{Recommendations}
 It's highly recommended, that all inputs for SQL queries are sanitized by escaping the ' character.
-Another option is to create query objects via msqli instead of using simple query strings.
-This objects will automatically sanitized all inputs. For more information, please go to \url{https://www.owasp.org/index.php/SQL\_Injection}
+Another option is to create query objects by using  Prepared Statements.
+These objects will automatically sanitized all inputs. For more information, please go to \url{https://www.owasp.org/index.php/SQL\_Injection}
 
-This observation is related to OWASP Top 10-A1-Injections
+This observation is related to OWASP Top 10-A1-Injections and to OWASp Top 10-A6-Sensitive-Data-Exposure.
 
 \subsection{Comparison with our App}
 We avoided SQL-Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible.

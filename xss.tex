@@ -24,15 +24,16 @@ Risk: high\newline
 
 \subsection{Discovery}
 
-This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field.
+This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field. This vulnerability was not detected by \texit{wapiti}, which is especially searching for possible XSS attacks.
 
 \subsection{Likelihood}
 Exploiting this vulnerability requires basic technical skills. The attacker has to know about the basics of a XSS attack and basic java-script commands. It is possible to exploit this vulnerability from Internet as normal user.
 
 \subsection{Implication}
-There are multiple possible implication of a successful attack.  In combination with the unset HTTP\_ONLY flag leads to the possibility to impersonate as admin. To do so, the attacker can hijack the admin's session key by placing a javascript command  at the mentioned spot, which sents him the current session key. That's possible due to the unset HTTP\_ONLY-flag.  Therefore the session key can be accessed by the javascript command \"documnet.cookie\".
+There are multiple possible implication of a successful attack.  In combination with the unset HTTP\_ONLY flag  the attacker can perform an session hijacking  attack. For that, the attacker uses the XSS attack to sent the current admin's session key session to himself. That's possible due to the unset HTTP\_ONLY-flag.  Therefore the session key can be accessed by the javascript command \"documnet.cookie\". Now the attacker can use this session key to bypass the authentication and act as the admin. 
+
 The unset HTTP\_ONLY-flag  was discovered by the tool ZAP.
-The attacker could also create a duplicate of the website, to that the admin is redirected, without even noticing. In that way, the attaccker could record all inputs made by the admin.
+The attacker could also create a duplicate of the website to that the admin is redirected without even noticing. In that way, the attacker could record all inputs made by the admin.
 
 
 
