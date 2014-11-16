@@ -144,7 +144,8 @@ With a integrated dictionary-based password cracking tool, you can convert the h
 	\item http://192.168.56.101/sc-course/controllers/user/login\_process.php (email,password)
 	\item http://192.168.56.101/sc-course/controllers/transactions/create\_process.php (transaction[payment][to\_iban],transaction[payment][amount])
 	\item http://192.168.56.101/sc-course/controllers/user/registration\_process.php (user[email],user[name],user[password],user[password\_confirmation],user[account\_no],user[employee],user[terms\_and\_conditions])
-	\item
+	\item http://192.168.56.101/sc-course/controllers/user/logout\_process.php (logout)
+	
 	
 \end{itemize}
 
@@ -157,11 +158,11 @@ sqlmap -u "http://192.168.56.101/sc-course/controllers/user/login_process.php" -
 Unfortunately none of the requests is insecure in terms of SQL Injections.
 
 \subsection{Likelihood}
-Assuming that the attacker has basic knowledge about SQL Injections and knows how to use \textit{sqlmap}, it's very likely that this vulnerability will be exploited.
+Assuming that the attacker has basic knowledge about SQL Injections and knows how to use \textit{sqlmap}, it's very likely that this vulnerability will be exploited, because a GET parameter is the vulnerable one. It's more likely that an attacker will test a GET instead of POST parameter, because it's easier to detect.
 
 
 \subsection{Implication}
-The vulnerability in combination with \textit{sqlmap} leads to full compromise of all data, stored in the database. The attacker can hijack information about the names of databases, tables, columns of tables and can even dump whole tables.  In our special case, it was even possible to get the users' passwords in plaintext, because they weren't hashed. This is a vulnerability itself, described at \url{https://www.owasp.org/index.php/Top_10_2013-A6-Sensitive_Data_Exposure}
+The vulnerability in combination with \textit{sqlmap} leads to full compromise of all data, stored in the database. The attacker can hijack information about the names of databases, tables, columns of tables and can even dump whole tables.  In our special case, it was even possible to get the users' passwords in plain text, because they weren't hashed. This is a vulnerability itself, described at \url{https://www.owasp.org/index.php/Top_10_2013-A6-Sensitive_Data_Exposure}
 You can also get the name and the password of the root user of the database. This was benefited by a weak password, whereby the plain password could be recovered from the received hash within seconds. This results in full write access to the database for the attacker.
 
 
@@ -170,10 +171,10 @@ It's highly recommended, that all inputs for SQL queries are sanitized by escapi
 Another option is to create query objects by using  Prepared Statements.
 These objects will automatically sanitized all inputs. For more information, please go to \url{https://www.owasp.org/index.php/SQL\_Injection}
 
-This observation is related to OWASP Top 10-A1-Injections and to OWASp Top 10-A6-Sensitive-Data-Exposure.
+This observation is related to OWASP Top 10-A1-Injections and to OWASP Top 10-A6-Sensitive-Data-Exposure.
 
 \subsection{Comparison with our App}
-We avoided SQL-Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible.
+We avoided SQL Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible. To be sure we did the same test as mentioned before without finding any vulnerable parameters.
 
 \section{Shell Injection}
 
@@ -243,7 +244,7 @@ It took us hours to get this exploit working, but with some basic knowledge of t
 A successful attack makes the server executing any code or program you like. We managed to get the hole PHP source code, where e.g. the database password is stored. It would be also possible to get other files like \textit{/etc/passwd} or execute other malicious code!
 
 \subsection{Recommendations}
-The easiest way to fix this issue is to use temporary randomly assigned file names and get rid of the one the user chose (Do not trust the user's unput!). Normally this is done automatically by PHP, moving the file to the originally chosen file name by the user is optional but part of most tutorials on the Internet.
+The easiest way to fix this issue is to use temporary randomly assigned file names and get rid of the one the user chose (Do not trust the user's input!). Normally this is done automatically by PHP, moving the file to the originally chosen file name by the user is optional but part of most tutorials on the Internet.
 
 \subsection{Comparison with our App}
 Our application is always using the temporary name PHP saved the file under. That means the application is not affected by this vulnerability, because we do not care about the user given name of the file.
