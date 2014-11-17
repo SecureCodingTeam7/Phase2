@@ -176,6 +176,60 @@ This observation is related to OWASP Top 10-A1-Injections and to OWASP Top 10-A6
 \subsection{Comparison with our App}
 We avoided SQL Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible. To be sure we did the same test as mentioned before without finding any vulnerable parameters.
 
+\section{SQL Injection 2}
+
+\subsection{Observation}
+
+We found a second possibility for a SQL Injection, which in combination with the misconfigured directory listing can lead to database leakage. Furthermore compromise of user, employee and mysql user credentials is possible through the usage of sqlmap.\newline
+
+Likelihood:  medium - high\newline
+
+Impact: high\newline
+
+Risk: high\newline
+
+\subsection{Discovery}
+
+The vulnerable GET parameter was found using ZAP. While spidering through the application ZAP noted that the parameter \emph{id} on the page \emph{display.php} may be vulnerable to SQL Injections. Although fuzzing the parameter with ZAP SQL Injection payloads does not produce any noticable results, we managed to hand-craft a payload that can compromise the bank systems admin credentials. The payload can also be altered to obtain any other data within the database.
+
+\begin{lstlisting}[caption= The vulnerable parameter, label=listing:injection2parameter]
+/sc-course/views/transactions/display.php?id=1
+\end{lstlisting}
+
+
+The GET parameter \emph{id} seems to be used in an SQL Select statement. While it is easy to select other data as well through a union statement, the output on the web page does not reflect that additional data. Since only a certain portion of the selected data is displayed on the page, we needed to obtain the other data through other means. Therefore we altered the statement to create a dumpfile of the selected data. Since the webservers configuration allows directory listing it is very easy to access the created file and read out all of the data. The final statement is as follows:
+
+\begin{lstlisting}[caption= Dumping admin credentials to file via Injection, label=listing:injection2statement]
+display.php?id=1' UNION SELECT * FROM users INTO DUMPFILE 'adminCredentials' -- "
+\end{lstlisting}
+
+This will write the admin credentials to a file. The attacker can place this file into an accessible directory or use the shell injection vulnerability (presented in the following section), to upload the file.
+
+\begin{lstlisting}[caption= File Contents, label=listing:injection2statement]
+12014-10-26 17:47:2128910000-00-00-00 00:00:001t.srivishnu@gmail.com1234567890t.srivishnu@gmail.com1
+\end{lstlisting}
+It is not hard to identify the admin user name and password from this information. By altering the select statement it becomes possible to dump the credentials of any known or suspected users. Furthermore it is possible to dump entire tables using the mysql OUTFILE command.
+
+It is also possible to run sqlmap on this parameter, resulting in the same breaches that were found during the first SQL Injection attack in the previous section.
+\begin{lstlisting}[caption= Using sqlmap on id parameter in display.php, label=listing:injection2statement]
+>C:\Python27\python C:\sqlmap\sqlmap.py -u 192.168.56.102/sc-course/views/transactions/
+display.php?id=1 --dump -D banking_development -T users
+\end{lstlisting}
+\subsection{Likelihood}
+The hand-crafted exploit took quite a while to design and requires some knowledge. However, given a vulnerable parameter like the \emph{id} parameter in display.php, an attacker can just use sqlmap to do the work for him. The tool is very effective and can dump the entire database in a few seconds, no skills required.
+
+\subsection{Implication}
+The entire database is compromised, along with all user credentials. This includes payment data, TAN numbers, personal details and login credentials. The implications are further amplified by the fact that user passwords are for some reason stored in plain text. No hashing or salting is applied.
+
+\subsection{Recommendations}
+It is highly recommended, that all inputs for SQL queries are properly sanitized. The developers should at least have used \emph{mysql\_real\_escape\_string} in addition to single quotes. A better approach would be to create query objects and use prepared statements.
+More information can be found at \url{https://www.owasp.org/index.php/SQL\_Injection}
+
+This observation is related to OWASP Top 10-A1-Injections and to OWASP Top 10-A6-Sensitive-Data-Exposure.
+
+\subsection{Comparison with our App}
+We avoided SQL Injection by using Prepared Statements. To the best of our knowledge all user inputs are sanitized and injections like shown above are not possible. Furthermore we do not make use of GET parameters. We tried running sqlmap on our application, without finding any vulnerable parameters.
+
 \section{Shell Injection}
 
 \subsection{Observation}

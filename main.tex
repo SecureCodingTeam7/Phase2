@@ -37,7 +37,16 @@
 \maketitle
 
 \part{Executive Summary}
+This report states our findings of the black-box vulnerability identification and testing phase within the Secure Coding lecture at TUM. We were given a black-box view of a simplified banking application, developed by team 10. Our testing methodology was inspired by OWASP guidelines. We used the \emph{OWASP Top 10} as a roadmap, testing for each of the mentioned vulnerabilities. 
 
+\subsubsection{Information Gathering and Web Server Configuration Testing}
+The first steps were information gathering and web server configuration testing. This included mapping the application structure using spider tools and testing for web server misconfigurations, such as enabled directory listing. We mostly used ZAP (OWASP Zed Attack Proxy) and nikto during this phase. 
+
+\subsubsection{Testing Authentication, Authorization and Session Handling}
+We continued by testing authentication, authorization and session handling. This included checking the credentials, password policies and access possibilities for regular users and employees. We also explored, whether it was possible to bypass authentication mechanisms. We found a very weak password policy and insecure direct object references, that made it possible for any user, to access sensitive files on the server. A more detailed account is given in section 2. Regarding the session handling, we found that it was possible to hijack sessions using CSRF (Cross Site Request Forgery) or Reflected XSS (Cross Site Scripting). During the second phase we also used ZAP and nikto in addition to wapiti and iMacro. More information about these vulnerabilities can be found in section 3. 
+
+\subsubsection{Input Validation Testing}
+In the final step we tested for one of the most common and impactful security issues, which is insufficient input validation. We found a large attack surface with a multitude of parameters that were not validated properly. One of these allowed a persistent XSS attack that could be used to hijack employee sessions or automatically redirect users to phishing sites. This issue is described in section 3.2. Another two parameters allowed SQL Injection, which could be used for a range of attacks, from reading table names, user passwords and payment information up to dumping the bank admins credentials and gaining complete root access to the database. The SQL Injection vulnerabilties and attacks are detailed in section 4.1 and 4.2. Finally, we also found a Shell Injection vulnerability in the batch transaction file upload and processing logic. A file name chosen by the user is directly appended to the shell call, without any input sanitation. Some file name tampering, which is described in section 4.3, enabled us to execute arbitrary commands on the shell. During this final phase we used ZAP and sqlmap. A detailed explanation on how these attacks work and how the tools were used is provided in section 4.
 \tableofcontents
 
 \part{Time Tracking Table}
