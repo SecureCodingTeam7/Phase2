@@ -20,8 +20,8 @@ With ZAP Spider, we were searching for GET and POST Requests with Parameters whi
 
 \subsubsection{GET}
 \begin{itemize}
-	\item http://<host-ip>/sc-course/views/transactions/user.php?user\_id=2 
-	\item http://<host-ip>/sc-course/views/transactions/tan\_entry.php?transaction\_id=18
+	\item http://$<$host-ip$>$/sc-course/views/transactions/user.php?user\_id=2 
+	\item http://$<$host-ip$>$/sc-course/views/transactions/tan\_entry.php?transaction\_id=18
 	
 \end{itemize}
  In the context of SQL Injections, we ignore the Get-Requests with the flash parameter, because they're not part of SQL queries.
@@ -141,10 +141,10 @@ With a integrated dictionary-based password cracking tool, you can convert the h
 
 \subsubsection{POST}
 \begin{itemize}
-	\item http://192.168.56.101/sc-course/controllers/user/login\_process.php (email,password)
-	\item http://192.168.56.101/sc-course/controllers/transactions/create\_process.php (transaction[payment][to\_iban],transaction[payment][amount])
-	\item http://192.168.56.101/sc-course/controllers/user/registration\_process.php (user[email],user[name],user[password],user[password\_confirmation],user[account\_no],user[employee],user[terms\_and\_conditions])
-	\item http://192.168.56.101/sc-course/controllers/user/logout\_process.php (logout)
+	\item http://$<$host-ip$>$/sc-course/controllers/user/login\_process.php (email,password)
+	\item http://$<$host-ip$>$/sc-course/controllers/transactions/create\_process.php (transaction[payment][to\_iban],transaction[payment][amount])
+	\item http://$<$host-ip$>$/sc-course/controllers/user/registration\_process.php (user[email],user[name],user[password],user[password\_confirmation],user[account\_no],user[employee],user[terms\_and\_conditions])
+	\item http://$<$host-ip$>$/sc-course/controllers/user/logout\_process.php (logout)
 	
 	
 \end{itemize}
