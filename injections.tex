@@ -2,6 +2,7 @@
 \chapter{Injection Attacks}
 
 \section{SQL Injection}
+\label{chapter:sql_injection}
 
 \subsection{Observation}
 
@@ -177,6 +178,8 @@ This observation is related to OWASP Top 10-A1-Injections and to OWASP Top 10-A6
 We avoided SQL Injection by using Prepared Statements. Therefore the user inputs are sanitized and injections like shown above are not possible. To be sure we did the same test as mentioned before without finding any vulnerable parameters.
 
 \section{SQL Injection 2}
+\label{chapter:sql_injection2}
+
 
 \subsection{Observation}
 
@@ -231,6 +234,7 @@ This observation is related to OWASP Top 10-A1-Injections and to OWASP Top 10-A6
 We avoided SQL Injection by using Prepared Statements. To the best of our knowledge all user inputs are sanitized and injections like shown above are not possible. Furthermore we do not make use of GET parameters. We tried running sqlmap on our application, without finding any vulnerable parameters.
 
 \section{Shell Injection}
+\label{chapter:shell_injection}
 
 \subsection{Observation}
 
