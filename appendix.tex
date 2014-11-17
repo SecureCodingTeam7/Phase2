@@ -1,0 +1,37 @@
+\chapter{rsync Deamon}
+\label{appendix:rsync}
+
+In order to be able to exploit the Shell Injection vulnerability, you have to configure your rsync as a deamon. I used the following config file:
+
+\begin{lstlisting}[caption=rsync Deaom config file]
+use chroot = true
+hosts allow = 0.0.0.0/0
+
+transfer logging = true
+log file = /var/log/rsyncd.log
+log format = %h %o %f %l %b
+
+[share]
+comment = Public Share
+path = /tmp/rsync
+read only = no
+list = yes
+uid = nobody
+gid = nobody
+\end{lstlisting}
+
+Then you are able to start the daemon via the following command:
+
+\begin{lstlisting}[caption=Command to start rsync Daemon]
+sudo rsync --config=/path/to/conf/rsyncd.conf --daemon --no-detach
+\end{lstlisting}
+
+For more information on the rsync daemon please refer to: \url{http://www.jveweb.net/en/archives/2011/01/running-rsync-as-a-daemon.html} and \url{http://wiki.ubuntuusers.de/rsync} (German).
+
+After this configuration you can easily copy files to the host over the network (without a password prompt) via this command:
+
+\begin{lstlisting}[caption=Copy files to the configured rsync share]
+rsync -r -v /desired/path <ip>::<name of share>/desired/path
+\end{lstlisting}
+
+The \textit{-r} parameter means \textit{recursive} and the \textit{-v} means \textit{verbose}.

